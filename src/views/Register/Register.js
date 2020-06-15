@@ -1,34 +1,78 @@
 import React from "react";
 import { Field, reduxForm } from "redux-form";
+import Input from "../../components/Input/FiledInput";
 import {
   FormGroup,
   Button,
   Card,
   CardBody,
-  CardFooter,
   Col,
   Container,
-  Form,
-  Input,
-  InputGroup,
-  InputGroupAddon,
-  InputGroupText,
   Row,
 } from "reactstrap";
-import { useDispatch } from "react-redux";
-import {fetchBySiret} from "../../redux/actions/company";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchBySiret, registerCompany } from "../../redux/actions/company";
+import { formSelector } from "../../redux/selectors/selectors";
 
-const Register = () => {
+const validate = (values) => {
+  console.log(values);
+  const errors = {};
+  if (!values.firstname) {
+    errors.firstname = "Veuillez renseigner votre nom";
+  }
+  if (!values.lastname) {
+    errors.lastname = "Veuillez renseigner votre prénom";
+  }
+  if (
+    !values.email ||
+    !/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,4}$/i.test(values.email)
+  ) {
+    errors.email = "Veuillez renseigner une adresse email valide";
+  }
+  return errors;
+};
+const Register = ({ initialize, pristine, submitting, invalid }) => {
   const dispatch = useDispatch();
   const [siretValid, setSiretValid] = React.useState(false);
+  const form = useSelector(formSelector);
+
+  let values;
+  if (form?.register?.values !== undefined) {
+    values = form.register.values;
+  }
+
   const handleSubmit = React.useCallback(
     async (e) => {
       e.preventDefault();
-      const bool = await dispatch(fetchBySiret());
-      setSiretValid(bool);
+      if (siretValid) {
+        const data = await dispatch(registerCompany(values));
+        console.log(data);
+      } else {
+        const data = await dispatch(fetchBySiret(values.siret));
+        if (data !== false) {
+          setSiretValid(true);
+          initialize({ ...data });
+        }
+      }
     },
-    [setSiretValid]
+    [setSiretValid, values, siretValid]
   );
+
+  const handleSiretChange = React.useCallback(() => {
+    initialize({});
+    setSiretValid(false);
+  }, []);
+
+  const disabled = React.useCallback(() => {
+    if (!siretValid) {
+      return false;
+    } else if (siretValid && invalid) {
+      return true;
+    } else {
+      return false;
+    }
+  },[]);
+
   return (
     <div className="app flex-row align-items-center">
       <Container>
@@ -52,6 +96,7 @@ const Register = () => {
                       component={Input}
                       placeholder="Siret"
                       name="siret"
+                      onChange={handleSiretChange}
                     />
                   </FormGroup>
                   {siretValid && (
@@ -62,7 +107,7 @@ const Register = () => {
                           type="text"
                           component={Input}
                           readOnly
-                          name="companyName"
+                          name="name"
                         />
                       </FormGroup>
                       <FormGroup>
@@ -79,7 +124,7 @@ const Register = () => {
                           type="text"
                           readOnly
                           component={Input}
-                          name="addressComplement"
+                          name="additionalAddress"
                         />
                       </FormGroup>
                       <FormGroup>
@@ -131,14 +176,23 @@ const Register = () => {
                         <Row>
                           <Col md={12}>
                             <label>Email :</label>
-                            <Field type="text" component={Input} name="email" />
+                            <Field
+                              type="email"
+                              component={Input}
+                              name="email"
+                            />
                           </Col>
                         </Row>
                       </FormGroup>
                     </>
                   )}
-                  <Button type="submit" color="success" block>
-                    Chercher
+                  <Button
+                    type="submit"
+                    color="success"
+                    block
+                    disabled={disabled()}
+                  >
+                    {siretValid ? "Enregister" : "Chercher"}
                   </Button>
                 </form>
               </CardBody>
@@ -153,4 +207,7 @@ const Register = () => {
 export default reduxForm({
   // a unique name for the form
   form: "register",
+  getFormState: formSelector,
+  destroyOnUnmount: false,
+  validate,
 })(Register);
