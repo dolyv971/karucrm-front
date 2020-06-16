@@ -1,9 +1,7 @@
 import { combineReducers } from "redux";
-import { reducer as formReducer } from 'redux-form'
+import { reducer as formReducer } from "redux-form";
+import global from "./global";
 
-const global = (state = [], action) => {
-  return state;
-};
 const rootReducer = combineReducers({
   global,
   form: formReducer,

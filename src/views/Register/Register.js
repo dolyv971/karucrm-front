@@ -1,6 +1,7 @@
 import React from "react";
 import { Field, reduxForm } from "redux-form";
-import Input from "../../components/Input/FiledInput";
+import { NotificationManager } from "react-notifications";
+import { Redirect } from "react-router-dom";
 import {
   FormGroup,
   Button,
@@ -11,6 +12,8 @@ import {
   Row,
 } from "reactstrap";
 import { useDispatch, useSelector } from "react-redux";
+
+import Input from "../../components/Input/FiledInput";
 import { fetchBySiret, registerCompany } from "../../redux/actions/company";
 import { formSelector } from "../../redux/selectors/selectors";
 
@@ -34,6 +37,7 @@ const validate = (values) => {
 const Register = ({ initialize, pristine, submitting, invalid }) => {
   const dispatch = useDispatch();
   const [siretValid, setSiretValid] = React.useState(false);
+  const [redirect, setRedirect] = React.useState(false);
   const form = useSelector(formSelector);
 
   let values;
@@ -46,16 +50,20 @@ const Register = ({ initialize, pristine, submitting, invalid }) => {
       e.preventDefault();
       if (siretValid) {
         const data = await dispatch(registerCompany(values));
-        console.log(data);
+        if (data !== false) {
+          setSiretValid(false);
+          setRedirect(true);
+        }
       } else {
-        const data = await dispatch(fetchBySiret(values.siret));
+        const data = await dispatch(fetchBySiret(values?.siret));
+        console.log(data);
         if (data !== false) {
           setSiretValid(true);
           initialize({ ...data });
         }
       }
     },
-    [setSiretValid, values, siretValid]
+    [setSiretValid, values, siretValid, setRedirect]
   );
 
   const handleSiretChange = React.useCallback(() => {
@@ -71,8 +79,11 @@ const Register = ({ initialize, pristine, submitting, invalid }) => {
     } else {
       return false;
     }
-  },[]);
+  }, []);
 
+  if (redirect) {
+    return <Redirect to="/" />;
+  }
   return (
     <div className="app flex-row align-items-center">
       <Container>
@@ -108,6 +119,12 @@ const Register = ({ initialize, pristine, submitting, invalid }) => {
                           component={Input}
                           readOnly
                           name="name"
+                        />
+                        <Field
+                          type="hidden"
+                          component="input"
+                          readOnly
+                          name="siren"
                         />
                       </FormGroup>
                       <FormGroup>
