@@ -21,6 +21,10 @@ const DefaultLayout = React.lazy(() => import("./containers/DefaultLayout"));
 // Pages
 const Login = React.lazy(() => import("./views/Login/Login"));
 const Register = React.lazy(() => import("./views/Register/Register"));
+const UserValidate = React.lazy(() => import("./views/User/Validate/Validate"));
+const UserInitPassword = React.lazy(() =>
+  import("./views/User/InitPassword/InitPassword")
+);
 // const Page404 = React.lazy(() => import('./views/Pages/Page404'));
 // const Page500 = React.lazy(() => import('./views/Pages/Page500'));
 
@@ -66,6 +70,18 @@ const App = () => {
             path="/register"
             name="Inscription"
             render={(props) => <Register {...props} />}
+          />
+          <Route
+            exact
+            path="/users/validation/:userId/:confirmationToken"
+            name="Validation de compte"
+            render={(props) => <UserValidate {...props} />}
+          />
+          <Route
+            exact
+            path="/users/init-password/:userId/:resetPasswordToken"
+            name="Initialiser votre mot de passe"
+            render={(props) => <UserInitPassword {...props} />}
           />
           {/*              <Route exact path="/404" name="Page 404" render={props => <Page404 {...props}/>} />
                 <Route exact path="/500" name="Page 500" render={props => <Page500 {...props}/>} />
